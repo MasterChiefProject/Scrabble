@@ -1,329 +1,388 @@
 # ScrabbleGame
 
-A Java implementation of a Scrabble-style word game engine, built around board validation, tile management, scoring, dictionary lookup, caching, probabilistic search, file I/O, and TCP client/server communication.
+A complete Java word-board game engine with a playable browser adaptation.
 
-[Play the browser demo](https://masterchiefproject.github.io/ScrabbleGame/) · [Browse the Java source](./src/test)
+The project started as a university Book Scrabble assignment and has been refactored into a production-style structure. The Java implementation now contains the board rules, scoring engine, tile bag, local multiplayer coordinator, dictionary subsystem, cache policies, and TCP dictionary service. The browser version mirrors the core placement and scoring behavior and can be hosted directly with GitHub Pages.
 
-![ScrabbleGame screenshot](https://github.com/MasterChiefProject/ScrabbleGame/assets/46121368/649615bc-32fe-4beb-abec-b5c389e58ba7)
-
-## Overview
-
-The original project is written in Java and focuses on the underlying game and dictionary infrastructure rather than only the user interface.
-
-It contains two main areas:
-
-1. A 15×15 word-board engine with tile placement, connectivity checks, premium squares, cross-word discovery, and score calculation.
-2. A dictionary service with LRU and LFU caching, a Bloom filter, exact file search, a dictionary manager, and a threaded TCP server.
-
-The repository now also contains a browser-playable adaptation under [`docs/`](./docs). The web version is intentionally separate from the original Java implementation so the Java source remains preserved while visitors can immediately interact with the project.
-
-## Live browser demo
-
-The browser version can be hosted directly with GitHub Pages:
+## Play in the browser
 
 https://masterchiefproject.github.io/ScrabbleGame/
 
-The demo includes:
+The browser version is local two-player pass-and-play. It includes:
 
-- 15×15 interactive board
-- 98-tile letter bag based on the Java `Tile.Bag` implementation
-- Seven-tile player rack
-- Original letter values
-- Premium-square board layout
-- First-move center requirement
-- Existing-tile reuse
-- Connected-word placement rules
-- Cross-word scoring
-- Rack shuffling and exchange
-- Running score, bag count, and turn history
-- Responsive layout with no external JavaScript libraries
+- 15 x 15 standard premium-square board
+- 100-tile English distribution, including two blank tiles
+- Seven-tile racks
+- First move center-square validation
+- Horizontal and vertical placement validation
+- Contiguity and board-connectivity validation
+- Cross-word generation and scoring
+- Double-letter, triple-letter, double-word, and triple-word scoring
+- 50-point seven-tile bingo bonus
+- Offline dictionary validation
+- Tile exchange and pass actions
+- Six-scoreless-turn game ending
+- Final rack-value score adjustment
+- Save and load using browser local storage
+- Dark mode by default
+- Light and dark theme switch with the selected background saved automatically
+- Responsive layout for desktop and smaller screens
 
-The browser demo is a JavaScript adaptation for GitHub Pages. It does not run the JVM implementation inside the browser.
+## Project structure
 
-Dictionary enforcement is intentionally disabled in the web demo. The original dictionary subsystem is designed around local file corpora and a TCP service, which are documented below.
-
-## Java architecture
-
-```mermaid
-flowchart TD
-    W[Word] --> B[Board]
-    T[Tile] --> B
-    BAG[Tile.Bag Singleton] --> T
-    B --> SCORE[Placement and Scoring]
-
-    DM[DictionaryManager Singleton] --> D[Dictionary]
-    D --> EC[Exists Cache: LRU]
-    D --> NC[Not-Exists Cache: LFU]
-    D --> BF[Bloom Filter]
-    D --> IO[Exact File Search]
-
-    CLIENT[TCP Client] --> SERVER[MyServer]
-    SERVER --> HANDLER[BookScrabbleHandler]
-    HANDLER --> DM
+```text
+ScrabbleGame/
+├── pom.xml
+├── README.md
+├── coursework/
+│   └── README.md
+├── docs/
+│   ├── index.html
+│   ├── style.css
+│   ├── app.js
+│   ├── words.txt
+│   ├── CMUDICT-LICENSE.txt
+│   └── .nojekyll
+└── src/
+    ├── main/
+    │   ├── java/com/masterchiefproject/scrabble/
+    │   │   ├── game/
+    │   │   ├── dictionary/
+    │   │   └── server/
+    │   └── resources/dictionary/
+    │       ├── words.txt
+    │       └── CMUDICT-LICENSE.txt
+    └── test/
+        └── java/com/masterchiefproject/scrabble/
 ```
 
-## Core components
+The original project placed production classes directly under `src/test`. That structure has been replaced with the standard Maven layout:
 
-| Component | Responsibility |
-| --- | --- |
-| `Board.java` | Maintains the 15×15 board, validates placement, detects connected words, applies premium squares, calculates scores, and commits tiles. |
-| `Tile.java` | Represents an immutable letter tile and its score. Contains the singleton `Tile.Bag` implementation. |
-| `Word.java` | Represents a sequence of tiles with row, column, and orientation metadata. |
-| `Dictionary.java` | Coordinates positive and negative caches, Bloom-filter queries, and exact file challenges. |
-| `DictionaryManager.java` | Lazily creates and reuses dictionaries for one or more source files. |
-| `CacheManager.java` | Bounded cache abstraction driven by a replacement policy. |
-| `LRU.java` | Least Recently Used replacement policy for words known to exist. |
-| `LFU.java` | Least Frequently Used replacement policy for words known not to exist. |
-| `BloomFilter.java` | Probabilistic membership filter using multiple message digests. |
-| `IOSearcher.java` | Performs exact word lookup across dictionary files. |
-| `MyServer.java` | Runs the TCP listener on a background thread and dispatches client connections. |
-| `BookScrabbleHandler.java` | Parses dictionary query/challenge requests and returns boolean results to the client. |
+- `src/main/java` contains production Java code.
+- `src/main/resources` contains runtime data.
+- `src/test/java` contains automated tests only.
+- `docs` contains the GitHub Pages application.
+- `coursework` is reserved for the original assignment documents.
 
-## Board engine
+## What was fixed in the original project
 
-### Board model
+The refactor addresses several correctness and structure problems in the original coursework snapshot:
 
-`Board` is implemented as a singleton and owns a 15×15 matrix of `Tile` references.
+- Production classes no longer live directly under `src/test`.
+- The three legacy `MainTrain1.java`, `MainTrain2.java`, and `MainTrain3.java` files each declared a public class named `MainTrain`, which prevents a normal Java build. They are replaced by proper JUnit tests.
+- `Board.dictionaryLegal()` previously returned `true` unconditionally. Board moves now validate every formed word through an injected exact `WordValidator`.
+- The original bag contained 98 letter tiles and no blanks. The game now uses the standard 100-tile distribution with two zero-point blanks.
+- Premium-square scoring is now applied only to newly placed tiles. Existing tiles cannot reuse letter or word multipliers on later turns.
+- Main words and perpendicular cross-words are constructed and scored independently.
+- Move validation is atomic. A rejected move cannot partially modify the board.
+- Alignment, gaps, center-square rules, board connectivity, overwrites, blank assignment, and seven-tile limits are validated explicitly.
+- Bloom-filter matches are verified against the exact dictionary, so false positives cannot legalize invalid words.
+- LRU reads now refresh recency, LFU eviction is deterministic, and cache size cannot drift from stored contents.
+- Dictionary files again support multiple whitespace-separated words per line.
+- The TCP server now handles clients concurrently, reports malformed requests, closes resources deterministically, and can be tested on an ephemeral port.
+- The browser adaptation now follows the corrected board/scoring rules and includes two-player turns, blanks, exchange, pass, dictionary validation, saves, and persistent dark/light themes.
 
-The placement engine checks:
+## Java engine
 
-- Board boundaries
-- Occupied positions
-- Maximum number of newly supplied tiles
-- Empty-word input
-- Connection to the existing board
-- First-word interaction with the center star
-- Reuse of existing board positions through `_` placeholders in the original Java API
-- Main-word and perpendicular cross-word construction
+### Board and move validation
 
-`tryPlaceWord()` returns the score awarded for a valid placement and returns `0` when the placement is rejected.
+`Board` owns the 15 x 15 tile grid and premium-square layout.
 
-### Premium squares
+A move is accepted only when all applicable rules pass:
 
-The Java board contains the following premium types:
+1. One to seven new rack tiles are placed.
+2. Every new tile is inside the board.
+3. A new tile does not overwrite an occupied square.
+4. All new tiles are aligned in a single row or column.
+5. Empty gaps are allowed only when an existing board tile fills the gap.
+6. The first move covers the center square.
+7. Later moves connect to the existing board.
+8. The move forms at least one word with two or more letters.
+9. Every formed word passes the configured `WordValidator`.
 
-- `DLS`, Double Letter Score
-- `TLS`, Triple Letter Score
-- `DWS`, Double Word Score
-- `TWS`, Triple Word Score
-- `STAR`, center square
+Validation and scoring happen before the board is mutated, so a rejected move cannot partially alter game state.
 
-The web adaptation reproduces the board layout and presents these as DL, TL, DW, TW, and the center star.
+### Word construction
 
-## Tile bag
+For every accepted move the engine constructs:
 
-`Tile.Bag` is also implemented as a singleton.
+- the main horizontal or vertical word
+- every perpendicular cross-word created by a newly placed tile
 
-The bag contains 98 letter tiles across A to Z. The distribution and score values are encoded directly in `Tile.java`.
+The engine deduplicates formed words and validates each one independently.
 
-Examples:
+### Scoring
 
-| Letter | Quantity | Score |
-| --- | ---: | ---: |
-| A | 9 | 1 |
-| E | 12 | 1 |
-| J | 1 | 8 |
-| Q | 1 | 10 |
-| X | 1 | 8 |
-| Z | 1 | 10 |
+Premium squares affect only tiles placed during the current turn.
 
-The bag supports random draws, requested-letter draws, returning tiles, quantity inspection, and total-size inspection.
+The engine supports:
+
+- normal letter values
+- double-letter squares
+- triple-letter squares
+- double-word squares
+- triple-word squares
+- the center square as a double-word square
+- multiple word multipliers in one word
+- cross-word scoring
+- zero-point blank tiles
+- 50-point bingo bonus when all seven rack tiles are played
+
+Existing tiles never receive a premium-square bonus again.
+
+### Tile bag
+
+`TileBag` uses the standard 100-tile English distribution:
+
+- 98 letter tiles
+- 2 blank tiles
+
+The bag supports random drawing and tile exchange. Exchanges are restricted by `ScrabbleGame` to turns where at least seven tiles remain in the bag.
+
+### Local multiplayer
+
+`ScrabbleGame` coordinates two to four players.
+
+It manages:
+
+- current player
+- racks
+- scores
+- tile refills
+- move execution
+- exchanges
+- passes
+- scoreless-turn tracking
+- end-of-game detection
+- final rack deductions
+- finisher bonus from opponents' remaining rack values
+
+The game ends when either:
+
+- the bag is empty and a player uses the last tile in their rack, or
+- six consecutive scoreless turns occur
 
 ## Dictionary subsystem
 
-The dictionary layer is designed to avoid unnecessary disk searches.
+The original coursework included a Bloom filter, LRU and LFU cache policies, dictionary management, and a small TCP service. Those components are retained and corrected.
 
-Each `Dictionary` owns:
+### Exact validation
 
-- A 400-entry positive cache using LRU replacement
-- A 100-entry negative cache using LFU replacement
-- A 256-bit Bloom filter
-- MD5 and SHA-1 message digests for Bloom-filter positions
-- One or more backing text files for exact lookup
+`Dictionary` implements `WordValidator`.
 
-### Query flow
+The lookup flow is:
 
 ```text
-query(word)
-    |
-    +-> Positive cache hit? -> true
-    |
-    +-> Negative cache hit? -> false
-    |
-    +-> Bloom filter
-          |
-          +-> probably present -> positive cache -> true
-          |
-          +-> absent -> negative cache -> false
+word
+  |
+  v
+positive cache
+  |
+  v
+negative cache
+  |
+  v
+Bloom filter pre-check
+  |
+  v
+exact word set
 ```
 
-A Bloom-filter hit is probabilistic, so the project also implements `challenge(word)` for exact file-based verification.
+The Bloom filter is used only as a fast negative pre-check. A possible Bloom-filter match is always confirmed against the exact word set, so Bloom false positives cannot make an invalid word legal.
 
-### Challenge flow
+### LRU cache
+
+`LRU` now refreshes recency on successful reads as well as writes.
+
+### LFU cache
+
+`LFU` tracks access frequency and uses deterministic age ordering to resolve equal-frequency eviction candidates.
+
+### CacheManager
+
+`CacheManager` no longer keeps an independent size counter that can become inconsistent with the actual set. Capacity is derived from the cache contents and replacement policy updates are synchronized.
+
+### DictionaryManager
+
+`DictionaryManager` lazily loads dictionaries by normalized file path and reuses them through a thread-safe map.
+
+It retains the original assignment-style APIs:
+
+```java
+DictionaryManager.get().query("book1.txt", "book2.txt", "HELLO");
+DictionaryManager.get().challenge("book1.txt", "book2.txt", "HELLO");
+```
+
+Dictionary files may contain one word per line or multiple whitespace-separated words per line.
+
+## TCP dictionary server
+
+`MyServer` and `BookScrabbleHandler` retain the original line protocol while fixing lifecycle and error handling.
+
+Supported requests:
 
 ```text
-challenge(word)
-    |
-    +-> IOSearcher scans the configured files
-    |
-    +-> Exact result updates the corresponding cache
+Q,file1.txt,file2.txt,WORD
+C,file1.txt,file2.txt,WORD
 ```
 
-## TCP dictionary service
-
-`MyServer` opens a `ServerSocket` and accepts connections on a background thread. Each accepted socket is passed to a `ClientHandler`.
-
-`BookScrabbleHandler` supports two request types:
+Responses:
 
 ```text
-Q,file1,file2,...,word
+true
+false
 ```
 
-Runs a normal dictionary query.
+Malformed requests return an `ERROR,...` response.
 
-```text
-C,file1,file2,...,word
-```
+The server now provides:
 
-Runs an exact dictionary challenge.
-
-The server returns `true` or `false` to the client.
-
-This part of the project demonstrates:
-
-- Java sockets
-- Background threads
-- Stream handling
-- Request parsing
-- Service separation
-- Shared dictionary management
-
-## Cache strategies
-
-### LRU
-
-The positive cache uses Least Recently Used replacement. Reusing a word moves it to the most-recent position, and eviction removes the oldest entry.
-
-### LFU
-
-The negative cache uses Least Frequently Used replacement. Each access increments a word's usage counter, and eviction removes the entry with the lowest count.
-
-Using different policies for positive and negative lookups demonstrates that cache behavior can be selected according to the workload rather than using one policy globally.
-
-## Bloom filter
-
-`BloomFilter` uses a Java `BitSet` and multiple `MessageDigest` algorithms.
-
-For every inserted word:
-
-1. Each digest hashes the word.
-2. The hash is converted to an integer.
-3. The integer is mapped into the bit-vector range.
-4. The corresponding bit is enabled.
-
-A query returns `false` as soon as one required bit is absent. If every required bit is present, the word is treated as probably present and can be verified with the exact challenge path when required.
-
-## Test harnesses
-
-The repository preserves three coursework test harness snapshots:
-
-| Harness | Main coverage |
-| --- | --- |
-| `MainTrain1.java` | Tile bag, board legality, placement, connected words, and scoring. |
-| `MainTrain2.java` | LRU, LFU, cache manager, Bloom filter, exact file search, and dictionary behavior. |
-| `MainTrain3.java` | TCP server lifecycle, dictionary manager, and `BookScrabbleHandler`. |
-
-The files are retained in their original project form and each declares a public class named `MainTrain`. Because Java requires a public class name to match the filename, run one harness at a time after copying the desired harness to `MainTrain.java`, while excluding the three snapshot files from that compilation.
+- deterministic startup and shutdown
+- concurrent client handling
+- socket cleanup with try-with-resources
+- idempotent start behavior
+- clean executor shutdown
+- support for port `0` in automated tests
 
 ## Browser adaptation
 
-The live version under `docs/` is designed as a portfolio layer on top of the original project.
+The browser implementation lives in `docs` because GitHub Pages can publish that folder directly.
 
 ```text
 docs/
 ├── index.html
 ├── style.css
 ├── app.js
+├── words.txt
 └── .nojekyll
 ```
 
-It uses only HTML, CSS, and JavaScript, so GitHub Pages can host it without a backend.
+The web version does not run the JVM in the browser. It is a JavaScript adaptation of the same game rules so the repository provides both:
 
-The Java implementation remains the authoritative source for the original academic project. The browser version focuses on making the board mechanics immediately accessible to a visitor.
+- the original Java engineering implementation
+- a zero-install playable demonstration
 
-### Run the browser version locally
+### Theme persistence
 
-From the repository root:
+Dark mode is the default.
+
+The light/dark selection is stored under browser local storage, so the selected background is restored on the next visit.
+
+### Game saves
+
+The web demo also stores an explicit game save in local storage. The Save game and Load game buttons preserve:
+
+- board tiles
+- racks
+- scores
+- bag contents
+- current player
+- turn history
+- scoreless-turn count
+
+Pending, uncommitted tiles are intentionally not persisted.
+
+## Dictionary data
+
+The included offline word list is derived from the CMU Pronouncing Dictionary data and filtered to alphabetic words between 2 and 15 letters.
+
+It is useful for a self-contained programming demo, but it is not an official tournament Scrabble lexicon. The dictionary layer is intentionally replaceable. To use another lexicon, replace the newline/whitespace-separated word list while keeping the same `WordValidator` interface.
+
+The CMU dictionary data license is included in:
+
+```text
+src/main/resources/dictionary/CMUDICT-LICENSE.txt
+docs/CMUDICT-LICENSE.txt
+```
+
+## Build and test
+
+Requirements:
+
+- Java 17 or newer
+- Maven 3.9 or newer
+
+Run the automated tests:
 
 ```bash
-cd docs
-python -m http.server 8000
+mvn test
 ```
 
-Then open:
+Compile the project:
 
-```text
-http://localhost:8000
+```bash
+mvn package
 ```
 
-## Repository structure
+Run the interactive Java console game after compilation:
 
-```text
-ScrabbleGame/
-├── README.md
-├── src/
-│   ├── test/
-│   │   ├── Board.java
-│   │   ├── Tile.java
-│   │   ├── Word.java
-│   │   ├── Dictionary.java
-│   │   ├── DictionaryManager.java
-│   │   ├── BloomFilter.java
-│   │   ├── CacheManager.java
-│   │   ├── LRU.java
-│   │   ├── LFU.java
-│   │   ├── MyServer.java
-│   │   ├── BookScrabbleHandler.java
-│   │   └── ...
-│   └── Project milestone PDFs
-└── docs/
-    ├── index.html
-    ├── style.css
-    ├── app.js
-    └── .nojekyll
+```bash
+java -cp target/classes com.masterchiefproject.scrabble.game.ConsoleGame
 ```
 
-## Engineering concepts demonstrated
+Or run the small non-interactive verification entry point:
 
-- Object-oriented design
-- Singleton pattern
-- Board and grid algorithms
-- Word placement validation
-- Cross-word discovery
-- Score calculation
-- Data structures
-- Cache replacement policies
-- Bloom filters and probabilistic lookup
-- Cryptographic hash APIs
-- File I/O
-- TCP sockets
-- Multithreading
-- Client/server request handling
-- Separation of game and dictionary responsibilities
-- Browser adaptation of a JVM project
+```bash
+java -cp target/classes com.masterchiefproject.scrabble.game.GameDemo
+```
 
-## Implementation notes
+## GitHub Pages
 
-The repository intentionally preserves the original Java source rather than rewriting it to match the browser demo.
+To publish the browser version:
 
-`Board.dictionaryLegal()` currently returns `true`, while the richer dictionary implementation exists as a separate subsystem. The browser demo therefore focuses on placement and scoring mechanics and does not claim to provide full dictionary enforcement.
+1. Open repository Settings.
+2. Open Pages.
+3. Choose `Deploy from a branch`.
+4. Select branch `main`.
+5. Select folder `/docs`.
+6. Save.
 
-The browser version uses conventional interactive placement behavior rather than reproducing every internal Java API detail byte for byte.
+The live URL is then:
 
-## Project documents
+https://masterchiefproject.github.io/ScrabbleGame/
 
-The original project milestone documents are preserved under [`src/`](./src) as part of the project history.
+## Automated tests
 
-## Disclaimer
+The test suite covers the major engine behaviors:
 
-This is an educational software project. Scrabble and related trademarks belong to their respective owners. This repository is not affiliated with or endorsed by those trademark owners.
+- standard 100-tile distribution
+- blank tile count
+- center-square first move
+- premium-square scoring
+- reuse of existing letters
+- disconnected move rejection
+- overwrite rejection
+- atomic rejection of invalid dictionary words
+- bingo bonus
+- exact dictionary validation
+- cache behavior
+- initial multiplayer rack state
+- six-scoreless-turn game ending
+
+## Main classes
+
+| Class | Responsibility |
+| --- | --- |
+| `Board` | Placement validation, word construction, scoring, board mutation |
+| `Tile` | Immutable letter or assigned blank tile |
+| `TileBag` | Standard distribution, random draw, exchange |
+| `ScrabbleGame` | Players, turns, racks, scores, game ending |
+| `Dictionary` | Exact word validation with caches and Bloom pre-check |
+| `BloomFilter` | Probabilistic negative pre-check |
+| `LRU` | Least-recently-used replacement policy |
+| `LFU` | Least-frequently-used replacement policy |
+| `CacheManager` | Fixed-capacity word cache |
+| `DictionaryManager` | Lazy multi-file dictionary registry |
+| `MyServer` | Concurrent TCP server lifecycle |
+| `BookScrabbleHandler` | Q/C dictionary request protocol |
+| `ConsoleGame` | Interactive terminal client for the Java engine |
+| `GameDemo` | Minimal console verification entry point |
+
+## Design goals
+
+This refactor focuses on four things:
+
+1. Correct game rules and scoring.
+2. Clear separation between production code, tests, resources, and web assets.
+3. Preservation of the technically interesting parts of the original university project.
+4. A playable demo that a recruiter or engineer can open immediately without installing Java.

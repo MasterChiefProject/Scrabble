@@ -1,115 +1,101 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Browser-playable adaptation of the Java ScrabbleGame portfolio project.">
-  <title>Book Scrabble | Browser Demo</title>
+  <meta name="description" content="Playable browser adaptation of the MasterChiefProject Java ScrabbleGame rules engine.">
+  <title>ScrabbleGame | Browser Demo</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="site-header">
+  <header class="topbar">
     <div>
-      <p class="eyebrow">JAVA PROJECT · BROWSER ADAPTATION</p>
-      <h1>Book Scrabble</h1>
-      <p class="subtitle">A playable web adaptation of the original Java board, tile-bag, placement, and scoring engine.</p>
+      <div class="eyebrow">MASTERCHIEFPROJECT</div>
+      <h1>ScrabbleGame</h1>
+      <p>Java rules engine, local two-player browser adaptation</p>
     </div>
-    <a class="source-link" href="https://github.com/MasterChiefProject/ScrabbleGame" target="_blank" rel="noreferrer">View Java source</a>
+    <div class="top-actions" aria-label="Page controls">
+      <button id="theme-toggle" class="button button-ghost" type="button">Light mode</button>
+      <button id="save-game" class="button button-ghost" type="button">Save game</button>
+      <button id="load-game" class="button button-ghost" type="button">Load game</button>
+      <button id="new-game" class="button" type="button">New game</button>
+    </div>
   </header>
 
-  <main class="page-shell">
-    <section class="game-panel" aria-label="Game board">
-      <div class="board-toolbar">
+  <main class="layout">
+    <section class="board-card" aria-label="Game board">
+      <div class="board-heading">
         <div>
-          <span class="toolbar-label">Board</span>
-          <span class="toolbar-hint">Click any square to set the start position.</span>
+          <span class="section-label">BOARD</span>
+          <h2 id="turn-title">Player 1's turn</h2>
         </div>
-        <button id="new-game" class="button button-secondary" type="button">New game</button>
+        <div class="dictionary-state" id="dictionary-state">Loading dictionary...</div>
       </div>
-
-      <div id="board" class="board" role="grid" aria-label="15 by 15 word board"></div>
-
+      <div class="board-wrap">
+        <div id="board" class="board" role="grid" aria-label="15 by 15 word board"></div>
+      </div>
       <div class="legend" aria-label="Premium square legend">
-        <span><i class="legend-chip tw"></i> Triple word</span>
-        <span><i class="legend-chip dw"></i> Double word</span>
-        <span><i class="legend-chip tl"></i> Triple letter</span>
-        <span><i class="legend-chip dl"></i> Double letter</span>
+        <span><i class="legend-swatch dl"></i>Double letter</span>
+        <span><i class="legend-swatch tl"></i>Triple letter</span>
+        <span><i class="legend-swatch dw"></i>Double word</span>
+        <span><i class="legend-swatch tw"></i>Triple word</span>
+        <span><i class="legend-swatch center"></i>Center</span>
       </div>
     </section>
 
     <aside class="sidebar">
-      <section class="card stats-card" aria-label="Game statistics">
-        <div class="stat">
-          <span class="stat-label">Score</span>
-          <strong id="score">0</strong>
+      <section class="panel score-panel">
+        <div class="section-label">SCORE</div>
+        <div id="scoreboard" class="scoreboard"></div>
+        <div class="meta-row">
+          <span>Tiles in bag</span>
+          <strong id="bag-count">86</strong>
         </div>
-        <div class="stat">
-          <span class="stat-label">Tiles left</span>
-          <strong id="bag-count">98</strong>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Turn</span>
-          <strong id="turn">1</strong>
+        <div class="meta-row">
+          <span>Scoreless turns</span>
+          <strong id="scoreless-count">0 / 6</strong>
         </div>
       </section>
 
-      <section class="card">
-        <div class="card-heading">
+      <section class="panel rack-panel">
+        <div class="rack-heading">
           <div>
-            <p class="section-kicker">Your rack</p>
-            <h2>Tiles</h2>
+            <div class="section-label">CURRENT RACK</div>
+            <h3 id="rack-player">Player 1</h3>
           </div>
-          <button id="shuffle-rack" class="text-button" type="button">Shuffle</button>
+          <span id="mode-label" class="mode-label">Placement mode</span>
         </div>
-        <div id="rack" class="rack" aria-label="Current rack"></div>
-        <button id="exchange-rack" class="button button-secondary full-width" type="button">Exchange rack</button>
+        <div id="rack" class="rack" aria-label="Current player's rack"></div>
+        <p id="rack-help" class="help">Select a rack tile, then click an empty board square. Click a pending board tile to return it.</p>
       </section>
 
-      <section class="card">
-        <p class="section-kicker">Placement console</p>
-        <h2>Play a word</h2>
-        <p class="helper">Type the complete word. Existing board letters are reused automatically when they match.</p>
-
-        <label for="word-input">Word</label>
-        <input id="word-input" class="text-input" type="text" maxlength="15" autocomplete="off" spellcheck="false" placeholder="HORN">
-
-        <div class="coordinate-grid">
-          <div>
-            <label for="row-input">Row</label>
-            <input id="row-input" class="text-input" type="number" min="1" max="15" value="8">
-          </div>
-          <div>
-            <label for="col-input">Column</label>
-            <input id="col-input" class="text-input" type="number" min="1" max="15" value="6">
-          </div>
+      <section class="panel actions-panel">
+        <div id="status" class="status" role="status" aria-live="polite">Loading...</div>
+        <div class="action-grid">
+          <button id="commit-move" class="button" type="button">Commit move</button>
+          <button id="recall-tiles" class="button button-ghost" type="button">Recall tiles</button>
+          <button id="exchange-tiles" class="button button-ghost" type="button">Exchange tiles</button>
+          <button id="pass-turn" class="button button-ghost" type="button">Pass</button>
         </div>
-
-        <fieldset class="orientation-fieldset">
-          <legend>Direction</legend>
-          <label class="choice"><input type="radio" name="orientation" value="horizontal" checked> Horizontal</label>
-          <label class="choice"><input type="radio" name="orientation" value="vertical"> Vertical</label>
-        </fieldset>
-
-        <button id="place-word" class="button button-primary full-width" type="button">Place word</button>
-
-        <div id="status" class="status status-info" role="status" aria-live="polite">Place the first word through the center star.</div>
       </section>
 
-      <section class="card">
-        <p class="section-kicker">Recent plays</p>
-        <h2>Turn history</h2>
-        <ol id="history" class="history">
-          <li>No words played yet.</li>
-        </ol>
+      <section class="panel history-panel">
+        <div class="section-label">TURN HISTORY</div>
+        <ol id="history" class="history"></ol>
       </section>
 
-      <section class="card compact-card">
-        <p class="section-kicker">About this demo</p>
-        <p>This browser version mirrors the original project's 15×15 board, 98-tile bag, letter values, premium-square layout, connectivity rules, and score calculation. It is a JavaScript adaptation for GitHub Pages, not a JVM runtime.</p>
-        <p>Dictionary lookup is intentionally not enforced here. The original Java project implements dictionary querying separately with caches, a Bloom filter, file search, and a TCP server.</p>
+      <section class="panel project-panel">
+        <div class="section-label">PROJECT</div>
+        <p>This browser version mirrors the placement and scoring rules implemented by the Java engine. It uses an offline English word list and stores game saves locally in your browser.</p>
+        <a href="https://github.com/MasterChiefProject/ScrabbleGame" target="_blank" rel="noreferrer">View Java source on GitHub</a>
       </section>
     </aside>
   </main>
+
+  <footer>
+    <span>Dictionary data derived from CMU Pronouncing Dictionary. This demo is not an official tournament word list.</span>
+    <a href="CMUDICT-LICENSE.txt" target="_blank">Dictionary license</a>
+  </footer>
 
   <script src="app.js"></script>
 </body>
