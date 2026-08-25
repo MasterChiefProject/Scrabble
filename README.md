@@ -1,10 +1,10 @@
-# ScrabbleGame
+# Scrabble
 
-[![CI](https://github.com/MasterChiefProject/ScrabbleGame/actions/workflows/ci.yml/badge.svg)](https://github.com/MasterChiefProject/ScrabbleGame/actions/workflows/ci.yml)
+[![CI](https://github.com/MasterChiefProject/Scrabble/actions/workflows/ci.yml/badge.svg)](https://github.com/MasterChiefProject/Scrabble/actions/workflows/ci.yml)
 
 A Java 17 word-board game engine with standard tile distribution and scoring, exact dictionary validation, a bounded TCP dictionary service, automated tests, and a browser-playable local multiplayer adaptation.
 
-**Live demo:** https://masterchiefproject.github.io/ScrabbleGame/
+**Live demo:** https://masterchiefproject.github.io/Scrabble/
 
 ## Highlights
 
@@ -31,7 +31,7 @@ A Java 17 word-board game engine with standard tile distribution and scoring, ex
 ## Architecture
 
 ```text
-ScrabbleGame/
+Scrabble/
 ├── .github/workflows/ci.yml
 ├── docs/                         # GitHub Pages browser application
 │   ├── index.html
@@ -106,7 +106,7 @@ During an exchange, replacement tiles are drawn before the returned tiles go bac
 
 ### Game coordination
 
-`ScrabbleGame` manages:
+`Scrabble` manages:
 
 - two to four uniquely named players
 - current turn
@@ -300,7 +300,7 @@ Folder: /docs
 
 The live site is:
 
-https://masterchiefproject.github.io/ScrabbleGame/
+https://masterchiefproject.github.io/Scrabble/
 
 ## Dictionary data
 
