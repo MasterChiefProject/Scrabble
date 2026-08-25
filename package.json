@@ -1,0 +1,12 @@
+{
+  "name": "scrabble-game-browser-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:web": "node --test tests/web/*.test.js",
+    "check:web": "node --check docs/engine.js && node --check docs/storage.js && node --check docs/app.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

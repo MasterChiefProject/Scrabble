@@ -2,11 +2,20 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  test:
+  java:
+    name: Java ${{ matrix.java }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['17', '21']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -15,16 +24,26 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: ${{ matrix.java }}
           cache: maven
 
-      - name: Run Java tests
-        run: mvn --batch-mode test
+      - name: Build and test
+        run: mvn --batch-mode --no-transfer-progress verify
+
+  browser:
+    name: Browser engine
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - name: Check browser JavaScript syntax
-        run: node --check docs/app.js
+      - name: Check JavaScript syntax
+        run: npm run check:web
+
+      - name: Run browser engine tests
+        run: npm run test:web

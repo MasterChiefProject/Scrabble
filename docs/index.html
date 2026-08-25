@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Playable browser adaptation of the MasterChiefProject Java ScrabbleGame rules engine.">
+  <meta name="color-scheme" content="dark light">
   <title>ScrabbleGame | Browser Demo</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -12,12 +13,12 @@
     <div>
       <div class="eyebrow">MASTERCHIEFPROJECT</div>
       <h1>ScrabbleGame</h1>
-      <p>Java rules engine, local two-player browser adaptation</p>
+      <p>Java 17 rules engine with a local multiplayer browser adaptation</p>
     </div>
     <div class="top-actions" aria-label="Page controls">
       <button id="theme-toggle" class="button button-ghost" type="button">Light mode</button>
       <button id="save-game" class="button button-ghost" type="button">Save game</button>
-      <button id="load-game" class="button button-ghost" type="button">Load game</button>
+      <button id="load-game" class="button button-ghost" type="button">Load save</button>
       <button id="new-game" class="button" type="button">New game</button>
     </div>
   </header>
@@ -27,9 +28,9 @@
       <div class="board-heading">
         <div>
           <span class="section-label">BOARD</span>
-          <h2 id="turn-title">Player 1's turn</h2>
+          <h2 id="turn-title">Loading game…</h2>
         </div>
-        <div class="dictionary-state" id="dictionary-state">Loading dictionary...</div>
+        <div class="dictionary-state" id="dictionary-state">Loading dictionary…</div>
       </div>
       <div class="board-wrap">
         <div id="board" class="board" role="grid" aria-label="15 by 15 word board"></div>
@@ -49,7 +50,7 @@
         <div id="scoreboard" class="scoreboard"></div>
         <div class="meta-row">
           <span>Tiles in bag</span>
-          <strong id="bag-count">86</strong>
+          <strong id="bag-count">0</strong>
         </div>
         <div class="meta-row">
           <span>Scoreless turns</span>
@@ -61,16 +62,16 @@
         <div class="rack-heading">
           <div>
             <div class="section-label">CURRENT RACK</div>
-            <h3 id="rack-player">Player 1</h3>
+            <h3 id="rack-player">Player</h3>
           </div>
           <span id="mode-label" class="mode-label">Placement mode</span>
         </div>
         <div id="rack" class="rack" aria-label="Current player's rack"></div>
-        <p id="rack-help" class="help">Select a rack tile, then click an empty board square. Click a pending board tile to return it.</p>
+        <p id="rack-help" class="help">Select a rack tile, then click an empty board square.</p>
       </section>
 
       <section class="panel actions-panel">
-        <div id="status" class="status" role="status" aria-live="polite">Loading...</div>
+        <div id="status" class="status" role="status" aria-live="polite">Loading…</div>
         <div class="action-grid">
           <button id="commit-move" class="button" type="button">Commit move</button>
           <button id="recall-tiles" class="button button-ghost" type="button">Recall tiles</button>
@@ -86,7 +87,7 @@
 
       <section class="panel project-panel">
         <div class="section-label">PROJECT</div>
-        <p>This browser version mirrors the placement and scoring rules implemented by the Java engine. It uses an offline English word list and stores game saves locally in your browser.</p>
+        <p>The browser demo mirrors the Java placement, scoring, exchange, and end-game rules. Games auto-save locally after each completed turn.</p>
         <a href="https://github.com/MasterChiefProject/ScrabbleGame" target="_blank" rel="noreferrer">View Java source on GitHub</a>
       </section>
     </aside>
@@ -94,9 +95,43 @@
 
   <footer>
     <span>Dictionary data derived from CMU Pronouncing Dictionary. This demo is not an official tournament word list.</span>
-    <a href="CMUDICT-LICENSE.txt" target="_blank">Dictionary license</a>
+    <a href="CMUDICT-LICENSE.txt" target="_blank" rel="noreferrer">Dictionary license</a>
   </footer>
 
-  <script src="app.js"></script>
+  <dialog id="new-game-dialog" aria-labelledby="new-game-title">
+    <form id="new-game-form" method="dialog" class="dialog-card">
+      <div class="dialog-heading">
+        <div>
+          <div class="section-label">NEW GAME</div>
+          <h2 id="new-game-title">Configure players</h2>
+        </div>
+        <button id="dialog-close" class="icon-button" type="button" aria-label="Close new game dialog">×</button>
+      </div>
+
+      <label class="field">
+        <span>Number of players</span>
+        <select id="player-count">
+          <option value="2" selected>2 players</option>
+          <option value="3">3 players</option>
+          <option value="4">4 players</option>
+        </select>
+      </label>
+
+      <div id="player-name-fields" class="player-name-fields">
+        <label class="field"><span>Player 1</span><input id="player-name-1" maxlength="40" value="Player 1" autocomplete="off"></label>
+        <label class="field"><span>Player 2</span><input id="player-name-2" maxlength="40" value="Player 2" autocomplete="off"></label>
+        <label class="field optional-player"><span>Player 3</span><input id="player-name-3" maxlength="40" value="Player 3" autocomplete="off"></label>
+        <label class="field optional-player"><span>Player 4</span><input id="player-name-4" maxlength="40" value="Player 4" autocomplete="off"></label>
+      </div>
+
+      <div id="new-game-error" class="dialog-error" role="alert"></div>
+      <div class="dialog-actions">
+        <button id="cancel-new-game" class="button button-ghost" type="button">Cancel</button>
+        <button class="button" type="submit">Start game</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>

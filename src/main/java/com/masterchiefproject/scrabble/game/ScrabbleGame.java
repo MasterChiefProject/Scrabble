@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
@@ -38,6 +39,13 @@ public final class ScrabbleGame {
         this.validator = Objects.requireNonNull(validator, "validator");
         this.bag = Objects.requireNonNull(bag, "bag");
         this.players = playerNames.stream().map(Player::new).toList();
+
+        Set<String> uniqueNames = new HashSet<>();
+        for (Player player : players) {
+            if (!uniqueNames.add(player.name().toLowerCase(Locale.ROOT))) {
+                throw new IllegalArgumentException("Player names must be unique");
+            }
+        }
         refillAllRacks();
     }
 
@@ -80,6 +88,9 @@ public final class ScrabbleGame {
         List<Placement> placements = new ArrayList<>(requests.size());
 
         for (PlacementRequest request : requests) {
+            if (request == null) {
+                throw new InvalidMoveException("Placement requests cannot contain null");
+            }
             int rackIndex = request.rackIndex();
             if (rackIndex < 0 || rackIndex >= player.rack().size()) {
                 throw new InvalidMoveException("Invalid rack index: " + rackIndex);

@@ -3,6 +3,7 @@ package com.masterchiefproject.scrabble.game;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 /** Standard English 100-tile distribution, including two blank tiles. */
@@ -21,27 +22,36 @@ public final class TileBag {
     }
 
     TileBag(Random random) {
-        this.random = random;
+        this.random = Objects.requireNonNull(random, "random");
         reset();
+    }
+
+    /** Test-only deterministic bag content. The last list element is drawn first. */
+    TileBag(List<Tile> initialTiles, long seed) {
+        this.random = new Random(seed);
+        if (initialTiles == null || initialTiles.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException("Initial tiles cannot be null");
+        }
+        tiles.addAll(initialTiles);
     }
 
     private void reset() {
         tiles.clear();
-        add('A', 1, 9); add('B', 3, 2); add('C', 3, 2); add('D', 2, 4);
-        add('E', 1, 12); add('F', 4, 2); add('G', 2, 3); add('H', 4, 2);
-        add('I', 1, 9); add('J', 8, 1); add('K', 5, 1); add('L', 1, 4);
-        add('M', 3, 2); add('N', 1, 6); add('O', 1, 8); add('P', 3, 2);
-        add('Q', 10, 1); add('R', 1, 6); add('S', 1, 4); add('T', 1, 6);
-        add('U', 1, 4); add('V', 4, 2); add('W', 4, 2); add('X', 8, 1);
-        add('Y', 4, 2); add('Z', 10, 1);
+        add('A', 9); add('B', 2); add('C', 2); add('D', 4);
+        add('E', 12); add('F', 2); add('G', 3); add('H', 2);
+        add('I', 9); add('J', 1); add('K', 1); add('L', 4);
+        add('M', 2); add('N', 6); add('O', 8); add('P', 2);
+        add('Q', 1); add('R', 6); add('S', 4); add('T', 6);
+        add('U', 4); add('V', 2); add('W', 2); add('X', 1);
+        add('Y', 2); add('Z', 1);
         tiles.add(Tile.blankTile());
         tiles.add(Tile.blankTile());
         Collections.shuffle(tiles, random);
     }
 
-    private void add(char letter, int points, int count) {
+    private void add(char letter, int count) {
         for (int i = 0; i < count; i++) {
-            tiles.add(new Tile(letter, points, false));
+            tiles.add(Tile.letterTile(letter));
         }
     }
 
@@ -72,21 +82,26 @@ public final class TileBag {
     }
 
     /**
-     * Returns tiles to the bag, reshuffles, and draws the same number.
+     * Draws replacements first, then returns the exchanged tiles to the bag and reshuffles.
+     * This prevents a player from immediately drawing back a tile from the same exchange.
      * Callers should enforce the game rule that exchanges require at least seven tiles in the bag.
      */
     public List<Tile> exchange(List<Tile> returnedTiles) {
         if (returnedTiles == null || returnedTiles.isEmpty()) {
             throw new IllegalArgumentException("At least one tile is required for exchange");
         }
+        if (tiles.size() < returnedTiles.size()) {
+            throw new IllegalStateException("Not enough tiles remain to complete the exchange");
+        }
+
+        List<Tile> replacements = draw(returnedTiles.size());
         for (Tile tile : returnedTiles) {
-            if (tile.blank()) {
-                tiles.add(Tile.blankTile());
-            } else {
-                tiles.add(tile);
+            if (tile == null) {
+                throw new IllegalArgumentException("Returned tiles cannot contain null");
             }
+            tiles.add(tile.blank() ? Tile.blankTile() : tile);
         }
         Collections.shuffle(tiles, random);
-        return draw(returnedTiles.size());
+        return replacements;
     }
 }

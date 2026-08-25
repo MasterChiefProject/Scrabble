@@ -2,6 +2,10 @@
 /target/
 *.class
 
+# Node tooling
+/node_modules/
+/coverage/
+
 # IDEs
 .idea/
 .vscode/
@@ -14,6 +18,9 @@
 .DS_Store
 Thumbs.db
 
-# Logs / temporary files
+# Local environment / temporary files
+.env
+.env.*
 *.log
 *.tmp
+*.swp

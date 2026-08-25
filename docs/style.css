@@ -277,3 +277,49 @@ footer {
   .sidebar { grid-template-columns: 1fr; }
   footer { padding: 0 14px 24px; flex-direction: column; }
 }
+
+/* New game dialog */
+dialog {
+  width: min(520px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 24px 80px rgba(0,0,0,.42);
+}
+dialog::backdrop { background: rgba(0,0,0,.68); backdrop-filter: blur(3px); }
+.dialog-card { padding: 20px; }
+.dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+.dialog-heading h2 { margin: 4px 0 0; font-size: 22px; }
+.icon-button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+.field { display: grid; gap: 6px; margin-bottom: 11px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.field input, .field select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 8px 10px;
+  font: inherit;
+}
+.field input:focus, .field select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.player-name-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.player-name-fields [hidden] { display: none; }
+.dialog-error { min-height: 20px; color: var(--danger); font-size: 12px; margin-top: 2px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
+@media (max-width: 560px) {
+  .player-name-fields { grid-template-columns: 1fr; }
+}

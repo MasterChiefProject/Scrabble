@@ -20,12 +20,15 @@ public final class ConsoleGame {
     public static void main(String[] args) throws Exception {
         Dictionary dictionary = Dictionary.fromResource("/dictionary/words.txt");
         try (Scanner scanner = new Scanner(System.in)) {
-            System.out.print("Player 1 name [Player 1]: ");
-            String p1 = defaultName(scanner.nextLine(), "Player 1");
-            System.out.print("Player 2 name [Player 2]: ");
-            String p2 = defaultName(scanner.nextLine(), "Player 2");
+            int playerCount = readPlayerCount(scanner);
+            List<String> playerNames = new ArrayList<>(playerCount);
+            for (int i = 1; i <= playerCount; i++) {
+                String fallback = "Player " + i;
+                System.out.print(fallback + " name [" + fallback + "]: ");
+                playerNames.add(defaultName(scanner.nextLine(), fallback));
+            }
 
-            ScrabbleGame game = new ScrabbleGame(List.of(p1, p2), dictionary);
+            ScrabbleGame game = new ScrabbleGame(playerNames, dictionary);
             printHelp();
 
             while (!game.isGameOver()) {
@@ -203,6 +206,25 @@ public final class ConsoleGame {
 
     private static String rackText(Player player) {
         return player.rack().stream().map(tile -> tile.letter() == '?' ? "_" : tile.display()).toList().toString();
+    }
+
+    private static int readPlayerCount(Scanner scanner) {
+        while (true) {
+            System.out.print("Number of players [2-4, default 2]: ");
+            String value = scanner.nextLine().trim();
+            if (value.isEmpty()) {
+                return 2;
+            }
+            try {
+                int count = Integer.parseInt(value);
+                if (count >= 2 && count <= 4) {
+                    return count;
+                }
+            } catch (NumberFormatException ignored) {
+                // Ask again below.
+            }
+            System.out.println("Enter 2, 3, or 4.");
+        }
     }
 
     private static String defaultName(String value, String fallback) {

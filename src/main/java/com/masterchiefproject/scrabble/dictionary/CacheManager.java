@@ -1,6 +1,7 @@
 package com.masterchiefproject.scrabble.dictionary;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /** Fixed-capacity word cache backed by a configurable replacement policy. */
@@ -14,10 +15,11 @@ public final class CacheManager {
             throw new IllegalArgumentException("capacity must be positive");
         }
         this.capacity = capacity;
-        this.policy = policy;
+        this.policy = Objects.requireNonNull(policy, "policy");
     }
 
     public synchronized boolean query(String word) {
+        Objects.requireNonNull(word, "word");
         if (!cache.contains(word)) {
             return false;
         }
@@ -26,14 +28,15 @@ public final class CacheManager {
     }
 
     public synchronized void add(String word) {
+        Objects.requireNonNull(word, "word");
         if (cache.contains(word)) {
             policy.record(word);
             return;
         }
         if (cache.size() >= capacity) {
             String victim = policy.evict();
-            if (victim != null) {
-                cache.remove(victim);
+            if (victim == null || !cache.remove(victim)) {
+                throw new IllegalStateException("Replacement policy became inconsistent with cache contents");
             }
         }
         cache.add(word);
@@ -41,6 +44,7 @@ public final class CacheManager {
     }
 
     public synchronized void remove(String word) {
+        Objects.requireNonNull(word, "word");
         cache.remove(word);
         policy.remove(word);
     }
