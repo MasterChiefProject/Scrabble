@@ -106,7 +106,7 @@ During an exchange, replacement tiles are drawn before the returned tiles go bac
 
 ### Game coordination
 
-`Scrabble` manages:
+`ScrabbleGame` manages:
 
 - two to four uniquely named players
 - current turn
