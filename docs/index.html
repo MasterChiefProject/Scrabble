@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browser-playable adaptation of the Java ScrabbleGame portfolio project.">
+  <title>Book Scrabble | Browser Demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">JAVA PROJECT · BROWSER ADAPTATION</p>
+      <h1>Book Scrabble</h1>
+      <p class="subtitle">A playable web adaptation of the original Java board, tile-bag, placement, and scoring engine.</p>
+    </div>
+    <a class="source-link" href="https://github.com/MasterChiefProject/ScrabbleGame" target="_blank" rel="noreferrer">View Java source</a>
+  </header>
+
+  <main class="page-shell">
+    <section class="game-panel" aria-label="Game board">
+      <div class="board-toolbar">
+        <div>
+          <span class="toolbar-label">Board</span>
+          <span class="toolbar-hint">Click any square to set the start position.</span>
+        </div>
+        <button id="new-game" class="button button-secondary" type="button">New game</button>
+      </div>
+
+      <div id="board" class="board" role="grid" aria-label="15 by 15 word board"></div>
+
+      <div class="legend" aria-label="Premium square legend">
+        <span><i class="legend-chip tw"></i> Triple word</span>
+        <span><i class="legend-chip dw"></i> Double word</span>
+        <span><i class="legend-chip tl"></i> Triple letter</span>
+        <span><i class="legend-chip dl"></i> Double letter</span>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <section class="card stats-card" aria-label="Game statistics">
+        <div class="stat">
+          <span class="stat-label">Score</span>
+          <strong id="score">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Tiles left</span>
+          <strong id="bag-count">98</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Turn</span>
+          <strong id="turn">1</strong>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-heading">
+          <div>
+            <p class="section-kicker">Your rack</p>
+            <h2>Tiles</h2>
+          </div>
+          <button id="shuffle-rack" class="text-button" type="button">Shuffle</button>
+        </div>
+        <div id="rack" class="rack" aria-label="Current rack"></div>
+        <button id="exchange-rack" class="button button-secondary full-width" type="button">Exchange rack</button>
+      </section>
+
+      <section class="card">
+        <p class="section-kicker">Placement console</p>
+        <h2>Play a word</h2>
+        <p class="helper">Type the complete word. Existing board letters are reused automatically when they match.</p>
+
+        <label for="word-input">Word</label>
+        <input id="word-input" class="text-input" type="text" maxlength="15" autocomplete="off" spellcheck="false" placeholder="HORN">
+
+        <div class="coordinate-grid">
+          <div>
+            <label for="row-input">Row</label>
+            <input id="row-input" class="text-input" type="number" min="1" max="15" value="8">
+          </div>
+          <div>
+            <label for="col-input">Column</label>
+            <input id="col-input" class="text-input" type="number" min="1" max="15" value="6">
+          </div>
+        </div>
+
+        <fieldset class="orientation-fieldset">
+          <legend>Direction</legend>
+          <label class="choice"><input type="radio" name="orientation" value="horizontal" checked> Horizontal</label>
+          <label class="choice"><input type="radio" name="orientation" value="vertical"> Vertical</label>
+        </fieldset>
+
+        <button id="place-word" class="button button-primary full-width" type="button">Place word</button>
+
+        <div id="status" class="status status-info" role="status" aria-live="polite">Place the first word through the center star.</div>
+      </section>
+
+      <section class="card">
+        <p class="section-kicker">Recent plays</p>
+        <h2>Turn history</h2>
+        <ol id="history" class="history">
+          <li>No words played yet.</li>
+        </ol>
+      </section>
+
+      <section class="card compact-card">
+        <p class="section-kicker">About this demo</p>
+        <p>This browser version mirrors the original project's 15×15 board, 98-tile bag, letter values, premium-square layout, connectivity rules, and score calculation. It is a JavaScript adaptation for GitHub Pages, not a JVM runtime.</p>
+        <p>Dictionary lookup is intentionally not enforced here. The original Java project implements dictionary querying separately with caches, a Bloom filter, file search, and a TCP server.</p>
+      </section>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
