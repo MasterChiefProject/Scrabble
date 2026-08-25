@@ -7,13 +7,13 @@
     <groupId>com.masterchiefproject</groupId>
     <artifactId>scrabble-game</artifactId>
     <version>2.1.0</version>
-    <name>ScrabbleGame</name>
+    <name>Scrabble</name>
     <description>Java 17 word-board game engine, dictionary service, tests, and browser adaptation</description>
-    <url>https://github.com/MasterChiefProject/ScrabbleGame</url>
+    <url>https://github.com/MasterChiefProject/Scrabble</url>
 
     <scm>
-        <url>https://github.com/MasterChiefProject/ScrabbleGame</url>
-        <connection>scm:git:https://github.com/MasterChiefProject/ScrabbleGame.git</connection>
+        <url>https://github.com/MasterChiefProject/Scrabble</url>
+        <connection>scm:git:https://github.com/MasterChiefProject/Scrabble.git</connection>
     </scm>
 
     <properties>
