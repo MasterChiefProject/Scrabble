@@ -1,4 +1,4 @@
-# ScrabbleGame
+# Scrabble
 
 A complete Java word-board game engine with a playable browser adaptation.
 
